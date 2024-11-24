@@ -12,10 +12,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import axios from "axios";
+import { API_BASE_URL } from "@/lib/utils";
 
 // 型
 interface Todo {
-  id: number;
+  id: string;
   text: string;
   completed: boolean;
 }
@@ -25,13 +26,13 @@ export default function TodoApp() {
   // 状態管理
   const [todos, setTodos] = useState<Todo[]>([]);
   const [newTodo, setNewTodo] = useState("");
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState("");
 
   // useEffectでGETリクエスト
   useEffect(() => {
     axios
-      .get("http://localhost:4000/todos")
+      .get(`${API_BASE_URL}/todos`)
       .then((response) => setTodos(response.data))
       .catch((error) => console.error("Error fetching todos:", error));
   }, []);
@@ -39,18 +40,22 @@ export default function TodoApp() {
   // 新規Todo作成
   const addTodo = () => {
     if (newTodo.trim() !== "") {
-      const newTodoItem = { id: Date.now(), text: newTodo, completed: false };
+      const newTodoItem = {
+        id: Date.now().toString(),
+        text: newTodo,
+        completed: false,
+      };
       setTodos([...todos, newTodoItem]);
       setNewTodo("");
       axios
-        .post("http://localhost:4000/todos", newTodoItem)
+        .post(`${API_BASE_URL}/todos`, newTodoItem)
         .then((response) => console.log("Todo added", response.data))
         .catch((error) => console.error("Error adding todo", error));
     }
   };
 
   // 完了ボタン
-  const toggleTodo = (id: number) => {
+  const toggleTodo = (id: string) => {
     setTodos(
       todos.map((todo) =>
         todo.id === id ? { ...todo, completed: !todo.completed } : todo
@@ -59,17 +64,17 @@ export default function TodoApp() {
   };
 
   // 削除ボタン
-  const deleteTodo = (id: number) => {
+  const deleteTodo = (id: string) => {
     console.log(id);
     setTodos(todos.filter((todo) => todo.id !== id));
     axios
-      .delete(`http://localhost:4000/todos/${id}`)
+      .delete(`${API_BASE_URL}/todos/${id}`)
       .then(() => console.log(`Todo with ID ${id} deleted`))
       .catch((error) => console.error("Error deleting todo:", error));
   };
 
   // 編集ボタン
-  const startEditing = (id: number, text: string) => {
+  const startEditing = (id: string, text: string) => {
     setEditingId(id);
     setEditingText(text);
   };
@@ -93,7 +98,7 @@ export default function TodoApp() {
 
       // バックエンドにPUTリクエストを送信してデータを更新
       axios
-        .put(`http://localhost:4000/todos/${editingId}`, updatedTodo)
+        .put(`${API_BASE_URL}/todos/${editingId}`, updatedTodo)
         .then(() => {
           console.log(`Todo with ID ${editingId} updated`);
         })
